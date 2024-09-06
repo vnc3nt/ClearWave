@@ -62,21 +62,17 @@ class AudioData(Dataset):
                 fs.append(f)
         self.files = sorted(fs)
 
-    def get_metadata(self, n: int) -> Tuple[str, int, str, str, int]:
-        fileid = self.files[n]
-        print(torchaudio.info(fileid, backend="ffmpeg"))
-        return torchaudio.info(fileid)
 
-    def __getitem__(self, n: int) -> Tuple[Tensor, int, str, str, int]:
-        metadata = self.get_metadata(n)
-        waveform = _load_waveform(self.archive, metadata[0], metadata[1])
-        return (waveform,) + metadata[1:]
+    def __getitem__(self, n: int) -> Tuple[Tensor, int, int, int, int]:
+        metadata = torchaudio.info(self.files[n])
+        waveform = _load_waveform(self.archive, self.files[n], 0)
+        return (waveform, metadata.sample_rate, metadata.num_channels, metadata.num_frames, metadata.bits_per_sample)
 
     def __len__(self) -> int:
         return len(self.files)
 
 # Create training and testing split of the data. We do not use validation in this tutorial.
-train_set = AudioData("training")
+train_set = AudioData("training")  # type: ignore
 test_set = AudioData("test")
 validation_set = AudioData("validation")
 
